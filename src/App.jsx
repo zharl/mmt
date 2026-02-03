@@ -652,7 +652,6 @@ function SFCMonetaryLab() {
             </div>
           </div>
         </div>
-      </div>
     </>
   );
 }
