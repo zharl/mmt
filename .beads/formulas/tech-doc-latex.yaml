@@ -1,0 +1,66 @@
+schema_version: 1
+template: tech-doc-latex
+description: LaTeX technical documentation for research-grade methodology papers
+defaults:
+  create_github_issue: true
+
+beads:
+  - key: OUTLINE
+    title: Draft document outline and section structure
+    description: Define sections, theorems, key equations. Identify what needs formal proof vs informal explanation.
+    verification_type: content
+    check: "test -f docs/latex/*.tex && grep -q 'section' docs/latex/*.tex"
+    depends_on: []
+    parallel_ok: false
+    paths:
+      - docs/latex/**
+
+  - key: DRAFT-MATH
+    title: Write mathematical content and derivations
+    description: Draft all equations, lemmas, proofs. Ensure notation is consistent.
+    verification_type: content
+    check: "grep -q 'equation' docs/latex/*.tex || grep -q 'align' docs/latex/*.tex"
+    depends_on: [OUTLINE]
+    parallel_ok: false
+    paths:
+      - docs/latex/**
+
+  - key: PROOFS
+    title: Verify mathematical correctness
+    description: Check all derivations step-by-step. Verify assumptions are stated.
+    verification_type: content
+    check: "echo 'Manual proof verification required'"
+    depends_on: [DRAFT-MATH]
+    parallel_ok: false
+    paths:
+      - docs/latex/**
+
+  - key: FIGURES
+    title: Create figures and diagrams
+    description: Generate any charts, diagrams, or visualizations needed.
+    verification_type: visual
+    check: "ls docs/latex/figures/*.pdf 2>/dev/null || ls docs/latex/figures/*.png 2>/dev/null"
+    depends_on: [OUTLINE]
+    parallel_ok: true
+    paths:
+      - docs/latex/figures/**
+
+  - key: REVIEW
+    title: Content review and polish
+    description: Review for clarity, fix notation, improve exposition.
+    verification_type: content
+    check: "echo 'Manual review required'"
+    depends_on: [PROOFS, FIGURES]
+    parallel_ok: false
+    paths:
+      - docs/latex/**
+
+  - key: COMPILE
+    title: Compile LaTeX to PDF
+    description: Build final PDF, resolve any LaTeX errors.
+    verification_type: test
+    check: "test -f docs/latex/*.pdf"
+    depends_on: [REVIEW]
+    parallel_ok: false
+    paths:
+      - docs/latex/**
