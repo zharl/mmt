@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { TrendingUp, Play, RotateCcw, Activity } from 'lucide-react';
 
 const formatBillions = (value) => {
