@@ -44,14 +44,14 @@ TGA ($\TGA$) &  &  & $-\TGA$ & $+\TGA$ \\
 \draw[flow] (treasury) -- (privatesector) node[midway, above, font=\footnotesize] {via Fed};
 \node[below=0.3cm of privatesector, font=\footnotesize, align=center] {$\Delta(\NFA_{\text{Private}}) = +G$\\Net financial asset created};
 
-% QE Operation
-\node[process, fill=orange!20, below=3cm of treasury] (qe1) {Households hold\\bonds $B_H$};
-\node[process, fill=orange!20, right=of qe1] (qe2) {Fed buys bonds\\pays with reserves};
-\node[process, fill=orange!20, right=of qe2] (qe3) {Households hold\\reserves $R$};
-\node[label, above=0.5cm of qe1, font=\bfseries] {Quantitative Easing (Asset Swap)};
-\draw[flow] (qe1) -- (qe2);
-\draw[flow] (qe2) -- (qe3);
-\node[below=0.3cm of qe2, font=\footnotesize, align=center] {$\Delta(\NFA_{\text{Private}}) = 0$\\Portfolio rebalancing only};
+	% QE Operation
+	\node[process, fill=orange!20, below=3cm of treasury] (qe1) {Households hold\\bonds $B_H$};
+	\node[process, fill=orange!20, right=of qe1] (qe2) {Fed buys bonds\\credits bank reserves};
+	\node[process, fill=orange!20, right=of qe2] (qe3) {Households hold\\deposits $D$};
+	\node[label, above=0.5cm of qe1, font=\bfseries] {Quantitative Easing (Asset Swap)};
+	\draw[flow] (qe1) -- (qe2);
+	\draw[flow] (qe2) -- (qe3);
+	\node[below=0.3cm of qe2, font=\footnotesize, align=center] {$\Delta(\NFA_{\text{Private}}) = 0$\\Portfolio rebalancing only};
 
 \end{tikzpicture}
 }%
