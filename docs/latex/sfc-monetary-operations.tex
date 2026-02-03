@@ -3,23 +3,23 @@
 % Packages
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{mathtools}
+\usepackage{microtype}
 \usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning}
+\usepackage[hidelinks]{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
 
 \geometry{margin=1in}
 
-% Theorem environments
+% Theorem environments (used for crisp accounting statements)
 \newtheorem{theorem}{Theorem}[section]
-\newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
-\newtheorem{example}[theorem]{Example}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
@@ -27,9 +27,14 @@
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\defeq}{\coloneqq}
+\newcommand{\TGA}{\mathrm{TGA}}
+\newcommand{\NFA}{\mathrm{NFA}}
+
+\setlist[itemize]{nosep,leftmargin=*}
+\setlist[enumerate]{nosep,leftmargin=*}
 
 \title{Stock-Flow Consistent Monetary Operations:\\
-Sectoral Balances and the Refutation of Loanable Funds}
+Sectoral Balances and Why ``Loanable Funds'' Fails as Accounting}
 \author{Technical Documentation}
 \date{\today}
 
@@ -38,325 +43,368 @@ Sectoral Balances and the Refutation of Loanable Funds}
 \maketitle
 
 \begin{abstract}
-We present a formal Stock-Flow Consistent (SFC) framework for understanding monetary operations in a modern fiat currency system. We derive the fundamental sectoral balance identity, demonstrate that bank credit creates deposits endogenously (horizontal money), show how fiscal operations inject net financial assets (vertical money), and prove that quantitative easing and bond operations are portfolio swaps that preserve private sector net wealth. This framework refutes the loanable funds doctrine by showing that credit is not constrained by prior savings. This document provides the theoretical foundation for an interactive web application that allows users to experiment with these operations and observe the balance sheet effects in real time.
+We present a compact Stock-Flow Consistent (SFC) accounting model for monetary operations in a modern fiat system with four consolidated sectors: Treasury, central bank, commercial banking system, and households (non-bank private sector). In this model, bank lending creates deposits endogenously (``horizontal money''), fiscal deficits add net financial assets (``vertical money''), and bond operations and QE/QT are portfolio swaps that change the composition of private portfolios without changing private net financial assets. The document is written to match an accompanying interactive web application that posts stylized transactions and updates balance sheets in real time.
 \end{abstract}
 
 \tableofcontents
 
 \section{Introduction}
 
-The loanable funds model treats savings as a prerequisite for investment, implying that banks are intermediaries between savers and borrowers. The Stock-Flow Consistent (SFC) framework, developed by Wynne Godley and refined by Modern Monetary Theory (MMT) economists including Warren Mosler and Stephanie Kelton, demonstrates that this view is fundamentally incorrect for modern monetary systems.
+Many textbook stories treat banks as intermediaries that \emph{lend out} prior saving. SFC accounting starts from a simpler discipline: every financial asset is someone else's liability, and every transaction must be recorded consistently across all sectors.
 
-This document formalizes the accounting identities and operational mechanics that underpin an interactive Stock-Flow Consistent monetary laboratory. The web application implements these equations and allows users to post transactions and observe the resulting balance sheet changes across all four sectors simultaneously.
-
-This document formalizes the key results:
-\begin{itemize}
-    \item The sectoral balance identity relating private and public net worth
-    \item The mechanics of horizontal money (bank credit expansion)
-    \item The mechanics of vertical money (fiscal operations)
-    \item The nature of monetary operations (bonds, QE, QT)
-    \item Balance sheet consistency across all sectors
-\end{itemize}
-
-\section{The Four-Sector Framework}
-
-We model the economy using four consolidated balance sheets (see Figure \ref{fig:balance-sheets}):
-
-\begin{definition}[The Four Sectors]
-Let the economy consist of four sectors with balance sheets:
+In a closed economy, this immediately implies three foundational results that the interactive application illustrates:
 \begin{enumerate}
-    \item \textbf{Treasury}: Assets $A_T$, Liabilities $L_T$, Net Worth $NW_T = A_T - L_T$
-    \item \textbf{Central Bank (Fed)}: Assets $A_F$, Liabilities $L_F$, Net Worth $NW_F = A_F - L_F$
-    \item \textbf{Banking System}: Assets $A_B$, Liabilities $L_B$, Net Worth $NW_B = A_B - L_B$
-    \item \textbf{Households}: Assets $A_H$, Liabilities $L_H$, Net Worth $NW_H = A_H - L_H$
+    \item Bank credit creates a loan and a matching deposit at the same time; it does not create net financial assets for the private sector.
+    \item Government deficits create net financial assets for the private sector (in the form of reserves and/or Treasury securities).
+    \item Operations like bond issuance and QE/QT are \emph{asset swaps} for the private sector; they alter composition (reserves vs.\ Treasuries) but not net financial assets.
+\end{enumerate}
+
+\section{Accounting Setup}
+
+\subsection{Sectors and Instruments}
+
+\begin{definition}[Four Consolidated Sectors]
+We consolidate the economy into four sectors:
+\begin{enumerate}
+    \item \textbf{Treasury} ($T$)
+    \item \textbf{Central Bank} ($CB$)
+    \item \textbf{Banking System} ($B$) (commercial banks, consolidated)
+    \item \textbf{Households} ($H$) (the non-bank private sector, consolidated)
 \end{enumerate}
 \end{definition}
 
-\subsection{Balance Sheet Components}
-
-Let us define the key stock variables:
+We track only a small set of \emph{financial} stock variables (levels):
 \begin{align}
-D &\defeq \text{Bank deposits (household asset, bank liability)} \\
-L &\defeq \text{Bank loans (bank asset, household liability)} \\
-R &\defeq \text{Bank reserves (bank asset, Fed liability)} \\
-B_H &\defeq \text{Treasury bonds held by households} \\
-B_F &\defeq \text{Treasury bonds held by Fed} \\
-\text{TGA} &\defeq \text{Treasury General Account (Treasury asset, Fed liability)}
+D &\defeq \text{Deposits (household asset, bank liability)} \\
+L &\defeq \text{Loans (bank asset, household liability)} \\
+R &\defeq \text{Reserves (bank asset, central bank liability)} \\
+B_H &\defeq \text{Treasury securities held by households} \\
+B_F &\defeq \text{Treasury securities held by the central bank} \\
+\TGA &\defeq \text{Treasury General Account (Treasury asset, central bank liability)}
 \end{align}
+
+\begin{remark}
+This model is intentionally narrow: it abstracts from production, prices, interest flows, bank capital regulation, foreign trade, and non-financial assets. Those are important in full macro models; here we isolate balance sheet mechanics.
+\end{remark}
+
+\subsection{Notation: Net Worth vs.\ Net Financial Assets}
+
+For each sector $i$, define (financial) net worth as
+\[
+NW_i \defeq A_i - L_i,
+\]
+where $A_i$ and $L_i$ denote \emph{financial} assets and liabilities included in this toy model. Because we omit non-financial assets, $NW_i$ should be read as a \emph{financial position} rather than a statement about real wealth.
+
+For the consolidated private sector ($B$+$H$), the key object is \emph{net financial assets vis-\`a-vis the public sector}, i.e.\ assets of the private sector that are liabilities of the Treasury/central bank. In this model those are reserves and Treasuries held outside government:
+\[
+\NFA_{\text{Private}} \defeq R + B_H.
+\]
+
+\subsection{Balance Sheets}
+
+Figure \ref{fig:balance-sheets} shows the four balance sheets and the offsetting entries that cancel under consolidation.
 
 \input{figures/balance-sheets.tex}
 
-\section{The Fundamental Sectoral Balance Identity}
+\section{The Sectoral Balance Identity (Closed Economy)}
 
-\begin{theorem}[Sectoral Balance Identity]
+\begin{theorem}[Financial Sectoral Balance Identity]
 \label{thm:sectoral-balance}
-The private sector's net financial wealth equals the negative of the consolidated public sector's net worth:
+In this four-sector closed-economy model,
 \[
-\text{Private NFW} = -(NW_T + NW_F)
+\NFA_{\text{Private}} = R + B_H = -(NW_T + NW_{CB}).
 \]
-where Private Net Financial Wealth (NFW) is defined as:
-\[
-\text{Private NFW} = R + B_H
-\]
+Equivalently, the consolidated public sector's (financial) net worth is the negative of the private sector's net financial assets.
 \end{theorem}
 
 \begin{proof}
-We construct the balance sheets for each sector and derive the identity.
+Write the relevant balance sheets using only the instruments in Section 2.
 
-\textbf{Treasury Balance Sheet:}
-\begin{align}
-A_T &= \text{TGA} \\
-L_T &= B_H + B_F \\
-NW_T &= \text{TGA} - (B_H + B_F)
-\end{align}
-
-\textbf{Federal Reserve Balance Sheet:}
-\begin{align}
-A_F &= B_F \\
-L_F &= R + \text{TGA} \\
-NW_F &= B_F - R - \text{TGA}
-\end{align}
-
-\textbf{Consolidated Public Sector:}
-\begin{align}
-NW_{\text{Public}} &= NW_T + NW_F \\
-&= (\text{TGA} - B_H - B_F) + (B_F - R - \text{TGA}) \\
-&= -B_H - R
-\end{align}
-
-\textbf{Private Net Financial Wealth:}
-The private sector holds reserves $R$ and bonds $B_H$ as financial assets (netting out loans and deposits which cancel):
+\textbf{Treasury:} assets $\TGA$; liabilities $B_H + B_F$:
 \[
-\text{Private NFW} = R + B_H = -(NW_T + NW_F)
+NW_T = \TGA - (B_H + B_F).
 \]
+
+\textbf{Central bank:} assets $B_F$; liabilities $R + \TGA$:
+\[
+NW_{CB} = B_F - (R + \TGA).
+\]
+
+Consolidate:
+\begin{align*}
+NW_T + NW_{CB}
+&= \bigl(\TGA - (B_H + B_F)\bigr) + \bigl(B_F - (R + \TGA)\bigr) \\
+&= - (R + B_H).
+\end{align*}
+Rearranging yields $R + B_H = -(NW_T + NW_{CB})$, which is exactly the claim.
 \end{proof}
 
 \begin{remark}
-This identity is an accounting identity, not a behavioral relationship. It holds by construction in a closed economy with consolidated sectors.
+This is pure accounting: it is true \emph{by construction} given the sector definitions and the instrument list. It does not depend on behavioral assumptions (preferences, investment functions, etc.).
 \end{remark}
 
-\section{Horizontal Money: Endogenous Credit Creation}
+\section{Monetary Operations}
 
-See Figure \ref{fig:operations} for a visualization of the three types of monetary operations.
+Figure \ref{fig:operations} summarizes the three broad classes of operations discussed below.
+
+\subsection{Horizontal Money: Bank Credit}
 
 \begin{definition}[Horizontal Money]
-Horizontal money refers to money created through bank lending. It expands both assets and liabilities on bank and household balance sheets simultaneously.
+\emph{Horizontal money} refers to private credit creation inside the private sector (banks and households). It expands gross balance sheets but does not change private net financial assets.
 \end{definition}
 
-\begin{proposition}[Bank Credit Expansion]
+\begin{proposition}[Loan Creates Matching Deposit]
 \label{prop:credit-expansion}
-When a bank extends credit of amount $\Delta L > 0$:
-\begin{enumerate}
-    \item Bank assets increase by $\Delta L$ (new loan)
-    \item Bank liabilities increase by $\Delta L$ (new deposit)
-    \item Household assets increase by $\Delta L$ (new deposit)
-    \item Household liabilities increase by $\Delta L$ (new loan)
-    \item Private Net Financial Wealth is unchanged: $\Delta(\text{Private NFW}) = 0$
-    \item Public sector net worth is unchanged: $\Delta(NW_{\text{Public}}) = 0$
-\end{enumerate}
+If banks extend new credit $\Delta L>0$ to households, then deposits rise by the same amount $\Delta D = \Delta L$. In particular,
+\[
+\Delta \NFA_{\text{Private}} = \Delta(R + B_H) = 0.
+\]
 \end{proposition}
 
 \begin{proof}
-The double-entry bookkeeping entries are:
-
-\textbf{Bank:}
-\begin{itemize}
-    \item Debit: Loans $+\Delta L$
-    \item Credit: Deposits $+\Delta L$
-\end{itemize}
-
-\textbf{Household:}
-\begin{itemize}
-    \item Debit: Deposits $+\Delta L$
-    \item Credit: Loans $+\Delta L$
-\end{itemize}
-
-Bank equity: $NW_B = (A_B + \Delta L) - (L_B + \Delta L) = NW_B$ (unchanged)
-
-Household net worth: $NW_H = (A_H + \Delta L) - (L_H + \Delta L) = NW_H$ (unchanged)
-
-Private NFW consists of reserves and bonds, neither of which changed, so $\Delta(\text{Private NFW}) = 0$.
-\end{proof}
-
-\begin{corollary}[Refutation of Loanable Funds - Part I]
-Bank lending does not require prior savings. Deposits are created simultaneously with loans.
-\end{corollary}
-
-\section{Vertical Money: Fiscal Operations}
-
-\begin{definition}[Vertical Money]
-Vertical money refers to money created through government fiscal operations (spending and taxation). It changes the net financial assets held by the private sector.
-\end{definition}
-
-\subsection{Fiscal Spending}
-
-\begin{proposition}[Fiscal Spending]
-\label{prop:fiscal-spending}
-When the Treasury spends amount $G > 0$:
-\begin{enumerate}
-    \item Treasury's TGA decreases by $G$
-    \item Bank reserves increase by $G$
-    \item Household deposits increase by $G$
-    \item Private Net Financial Wealth increases by $G$
-    \item Public sector net worth decreases by $G$
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-The double-entry operations:
-
-\textbf{Treasury:}
-\begin{itemize}
-    \item Credit: TGA $-G$
-\end{itemize}
-
-\textbf{Federal Reserve:}
-\begin{itemize}
-    \item Debit: Reserves $+G$
-    \item Credit: TGA $-G$
-\end{itemize}
-
-\textbf{Banking System:}
-\begin{itemize}
-    \item Debit: Reserves $+G$
-    \item Credit: Deposits $+G$
-\end{itemize}
-
-\textbf{Households:}
-\begin{itemize}
-    \item Debit: Deposits $+G$
-\end{itemize}
-
-Changes to sectoral net worth:
-\begin{align}
-\Delta NW_T &= -G \\
-\Delta NW_F &= 0 \quad \text{(both assets and liabilities increased by } G) \\
-\Delta(\text{Private NFW}) &= +G \quad \text{(reserves increased)}
-\end{align}
-
-Verifying the identity: $\Delta(\text{Private NFW}) = -\Delta(NW_T + NW_F) = -(-G + 0) = +G$ $\checkmark$
-\end{proof}
-
-\subsection{Taxation}
-
-\begin{proposition}[Taxation]
-Taxation is the inverse of spending. When taxes $T > 0$ are collected:
-\begin{enumerate}
-    \item Private Net Financial Wealth decreases by $T$
-    \item Public sector net worth increases by $T$
-\end{enumerate}
-\end{proposition}
-
-\begin{corollary}[Fiscal Deficits Create Net Financial Assets]
-A fiscal deficit $(G - T) > 0$ increases private sector net financial wealth by exactly $(G - T)$.
-\end{corollary}
-
-\section{Monetary Operations: Portfolio Swaps}
-
-\subsection{Bond Issuance}
-
-\begin{proposition}[Bond Issuance]
-When the Treasury issues bonds $B$ to the private sector:
-\begin{enumerate}
-    \item Household deposits decrease by $B$
-    \item Household bond holdings increase by $B$
-    \item Bank reserves decrease by $B$
-    \item Treasury's TGA increases by $B$
-    \item Private Net Financial Wealth is unchanged
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-This is an asset swap for households: reserves $\to$ bonds.
-
-Private NFW before: $R + B_H$
-
-Private NFW after: $(R - B) + (B_H + B) = R + B_H$
-
-Therefore $\Delta(\text{Private NFW}) = 0$.
-\end{proof}
-
-\subsection{Quantitative Easing (QE)}
-
-\begin{proposition}[Quantitative Easing]
-When the Fed purchases bonds $Q$ from the private sector:
-\begin{enumerate}
-    \item Household bond holdings decrease by $Q$
-    \item Fed bond holdings increase by $Q$
-    \item Household deposits increase by $Q$
-    \item Bank reserves increase by $Q$
-    \item Private Net Financial Wealth is unchanged
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-Another asset swap for households: bonds $\to$ reserves.
-
-Private NFW before: $R + B_H$
-
-Private NFW after: $(R + Q) + (B_H - Q) = R + B_H$
-
-Therefore $\Delta(\text{Private NFW}) = 0$.
+In the stylized single-bank case (used by the interactive application), the new loan appears as a bank asset and a household liability; the matching deposit appears as a household asset and a bank liability:
+\[
+\Delta L = +\Delta L,\quad \Delta D = +\Delta L,
+\]
+with no direct change in $R$, $B_H$, $B_F$, or $\TGA$. Therefore $\Delta(R + B_H)=0$.
 \end{proof}
 
 \begin{remark}
-QE and QT (Quantitative Tightening, the reverse operation) are portfolio rebalancing operations. They do not change the private sector's net financial wealth, only its composition.
+In multi-bank settings, payments and clearing can move reserves between banks \emph{after} lending. That affects reserve \emph{distribution}, not the accounting fact that lending creates a deposit and loan simultaneously.
 \end{remark}
 
-\section{Balance Sheet Integrity}
+\begin{corollary}[``Loanable Funds'' Fails as Accounting]
+The statement ``banks lend out deposits'' is not a balance sheet description of lending. In the act of lending, the deposit is created; it is not a pre-existing stock that must be gathered first.
+\end{corollary}
 
-We can verify that all four balance sheets remain balanced after each operation:
+\subsection{Vertical Money: Fiscal Spending and Taxes}
 
-\begin{theorem}[Balance Sheet Consistency]
-For each sector $i \in \{T, F, B, H\}$, the accounting identity $A_i = L_i + NW_i$ holds before and after any monetary operation.
-\end{theorem}
+\begin{definition}[Vertical Money]
+\emph{Vertical money} refers to changes in the private sector's net position against the public sector caused by fiscal operations (spending and taxes).
+\end{definition}
 
-\section{Implications and Conclusion}
+\begin{proposition}[Treasury Spending Adds Private Net Financial Assets]
+\label{prop:fiscal-spend}
+When the Treasury spends $G>0$ into the household sector (with banks as the settlement layer),
+\[
+\Delta R = +G,\qquad \Delta D = +G,\qquad \Delta \TGA = -G,
+\]
+and therefore $\Delta \NFA_{\text{Private}} = +G$.
+\end{proposition}
 
-\subsection{Refutation of Loanable Funds}
-
-The loanable funds doctrine asserts that:
+\begin{proof}
+The operational sequence is:
 \begin{enumerate}
-    \item Banks lend out savings (FALSE: Proposition \ref{prop:credit-expansion})
-    \item Government deficits crowd out private investment (FALSE: Proposition \ref{prop:fiscal-spending})
-    \item Central bank operations change money supply (MISLEADING: they change composition, not net wealth)
+    \item The central bank reduces the Treasury's deposit ($\TGA$) and increases bank reserves $R$ by $G$ (a shift within central bank liabilities).
+    \item Banks credit household deposits $D$ by $G$ and receive $G$ more reserves.
 \end{enumerate}
+Thus $R$ rises and $B_H$ is unchanged, so $\Delta(R+B_H)=+G$.
+\end{proof}
 
-The SFC framework shows:
+\begin{proposition}[Taxes Drain Private Net Financial Assets]
+\label{prop:tax}
+When taxes of amount $T>0$ are paid from deposits,
+\[
+\Delta R = -T,\qquad \Delta D = -T,\qquad \Delta \TGA = +T,
+\]
+and therefore $\Delta \NFA_{\text{Private}} = -T$.
+\end{proposition}
+
+\begin{proof}
+Tax payment debits household deposits and transfers reserves from banks to the central bank while increasing the Treasury's account:
+bank reserves fall by $T$ and $B_H$ is unchanged, so $\Delta(R+B_H)=-T$.
+\end{proof}
+
+\begin{corollary}[Deficit Equals Change in Private Net Financial Assets]
+\label{cor:deficit}
+In this closed-economy, no-interest toy model, the fiscal balance determines the change in private net financial assets:
+\[
+\Delta \NFA_{\text{Private}} = \Delta(R+B_H) = G - T.
+\]
+\end{corollary}
+
+\subsection{Treasury Securities: Reserve Drains (Not ``Funding'')}
+
+\begin{proposition}[Bond Issuance Is a Portfolio Swap]
+\label{prop:bond-issue}
+When the Treasury issues $B>0$ of securities to households, paying with deposits,
+\[
+\Delta B_H = +B,\qquad \Delta R = -B,\qquad \Delta D = -B,\qquad \Delta \TGA = +B,
+\]
+and therefore $\Delta \NFA_{\text{Private}} = \Delta(R+B_H)=0$.
+\end{proposition}
+
+\begin{proof}
+Households exchange deposits for a Treasury security: $D$ falls and $B_H$ rises.
+Settlement drains reserves from banks ($R$ falls) and credits the Treasury's account ($\TGA$ rises). Netting $R$ and $B_H$ shows no change in $\NFA_{\text{Private}}$:
+\[
+(R-B) + (B_H + B) = R + B_H.
+\]
+\end{proof}
+
+\begin{remark}
+Operationally, Treasury issuance is often paired with spending under current U.S.\ institutional rules (the Treasury spends from the $\TGA$). In accounting terms, issuance is best viewed as a reserve drain / asset swap that supports interest-rate implementation, not as a mechanism that provides the government with something it otherwise ``lacks'' in its own unit of account.
+\end{remark}
+
+\subsection{QE and QT: Central Bank Asset Swaps}
+
+\begin{proposition}[QE Preserves Private Net Financial Assets]
+\label{prop:qe}
+Under quantitative easing (QE), the central bank purchases $Q>0$ of Treasury securities from households:
+\[
+\Delta B_H = -Q,\qquad \Delta B_F = +Q,\qquad \Delta R = +Q,\qquad \Delta D = +Q,
+\]
+and therefore $\Delta \NFA_{\text{Private}} = 0$.
+\end{proposition}
+
+\begin{proof}
+QE swaps a Treasury security held by households for reserve-backed bank deposits. In this model, reserves rise by $Q$ and household bond holdings fall by $Q$, so $R+B_H$ is unchanged.
+\end{proof}
+
+\begin{proposition}[QT Is the Reverse Swap]
+Under quantitative tightening (QT), the central bank sells $Q>0$ of its Treasury securities to households:
+\[
+\Delta B_H = +Q,\qquad \Delta B_F = -Q,\qquad \Delta R = -Q,\qquad \Delta D = -Q,
+\]
+and therefore $\Delta \NFA_{\text{Private}} = 0$.
+\end{proposition}
+
+\begin{remark}
+These are \emph{nominal} accounting statements. QE/QT can still have valuation and distributional effects (e.g.\ via term premia, risk appetite, and asset prices). Those channels are outside the scope of this balance-sheet-only model.
+\end{remark}
+
+\subsection{Summary Table (What Changes, What Doesn't)}
+
+Table \ref{tab:summary} records the stock changes posted by the interactive application for each operation.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Operation & $\Delta D$ & $\Delta L$ & $\Delta R$ & $\Delta B_H$ & $\Delta B_F$ & $\Delta \TGA$ \\
+\midrule
+Bank credit ($+\Delta L$) & $+\Delta L$ & $+\Delta L$ & $0$ & $0$ & $0$ & $0$ \\
+Spend ($+G$) & $+G$ & $0$ & $+G$ & $0$ & $0$ & $-G$ \\
+Tax ($+T$) & $-T$ & $0$ & $-T$ & $0$ & $0$ & $+T$ \\
+Bond issue ($+B_H$) & $-B$ & $0$ & $-B$ & $+B$ & $0$ & $+B$ \\
+QE ($+B_F$) & $+Q$ & $0$ & $+Q$ & $-Q$ & $+Q$ & $0$ \\
+QT ($-B_F$) & $-Q$ & $0$ & $-Q$ & $+Q$ & $-Q$ & $0$ \\
+\bottomrule
+\end{tabular}
+\caption{Stock changes posted by each operation. Only fiscal deficits/surpluses change $\NFA_{\text{Private}}=R+B_H$. Bank credit expands gross balance sheets (loans and deposits) without changing $\NFA_{\text{Private}}$.}
+\label{tab:summary}
+\end{table}
+
+\section{Implications (and What This Does \emph{Not} Claim)}
+
+\subsection{What Follows Immediately}
+
+From the propositions above:
 \begin{itemize}
-    \item Banks create deposits when they lend (endogenous money)
-    \item Fiscal deficits create the net financial assets the private sector desires
-    \item QE/QT swap asset types without changing private wealth
+    \item Bank lending is not constrained by a pre-existing stock of deposits as a matter of double-entry bookkeeping (Proposition \ref{prop:credit-expansion}).
+    \item In this closed-economy model, fiscal deficits add net financial assets to the private sector (Corollary \ref{cor:deficit}).
+    \item Bond issuance and QE/QT preserve private net financial assets and therefore cannot, \emph{as accounting operations}, be described as changing ``private net wealth'' (Propositions \ref{prop:bond-issue} and \ref{prop:qe}).
 \end{itemize}
 
-\subsection{Policy Implications}
+\subsection{What Requires Additional Economics}
 
-\begin{enumerate}
-    \item The binding constraint on bank lending is not deposits but creditworthy borrowers and capital requirements
-    \item Government deficits are necessary to provide net financial assets to the private sector when the private sector desires to net save
-    \item Interest rate changes via QE/QT work through portfolio rebalancing effects, not changes in the quantity of money
-    \item The Treasury General Account (TGA) target mechanism shown in the interactive application demonstrates how bond issuance coordinates with fiscal operations to maintain desired government deposit levels
-\end{enumerate}
+This document does not, by itself, answer questions about inflation, real resource constraints, growth, distribution, or financial stability. Those require behavioral relationships, institutional detail, and (often) a richer sectoral breakdown.
 
-\subsection{Interactive Application}
+\section{Connection to the Interactive Application}
 
-The accompanying web application (\texttt{src/App.jsx}) implements these operations with the following features:
+The web application (\texttt{src/App.jsx}) implements the same stock variables and operations:
 \begin{itemize}
-    \item Real-time balance sheet updates across all four sectors
-    \item Automatic TGA targeting via bond issuance/redemption
-    \item Visual verification of the sectoral balance identity: Private NFW + Public NW = 0
-    \item Constraints that prevent operations from creating negative stocks (e.g., cannot tax more than existing deposits)
+    \item Stocks: \texttt{deposits}$\leftrightarrow D$, \texttt{loans}$\leftrightarrow L$, \texttt{reserves}$\leftrightarrow R$, \texttt{bondsHouseholds}$\leftrightarrow B_H$, \texttt{bondsCb}$\leftrightarrow B_F$, \texttt{tga}$\leftrightarrow \TGA$.
+    \item Identity check: \texttt{privateNfw} $= R + B_H$ and \texttt{publicNetWorth} $= NW_T + NW_{CB}$ (Theorem \ref{thm:sectoral-balance}).
+    \item Optional ``TGA targeting'' logic: automatic bond issuance/redemption to keep $\TGA$ near a chosen level (a simplified reserve-management story).
 \end{itemize}
 
-Users can experiment with different magnitudes of fiscal spending, taxation, bank lending, and monetary operations to develop intuition for how these transactions flow through the consolidated sectoral accounts.
+\section{Multi-Period Dynamics and Interest Rate Channels}
+\label{sec:multiperiod}
+
+\subsection{Time-Indexed Stock Variables}
+
+We now extend the static model to discrete time periods $t \in \{0,1,2,\ldots,T\}$. All stock variables are now time-indexed:
+\begin{align}
+D^t &\defeq \text{Deposits at end of period } t \\
+L^t &\defeq \text{Loans at end of period } t \\
+R^t &\defeq \text{Reserves at end of period } t \\
+B_H^t &\defeq \text{Treasury securities held by households at end of period } t \\
+B_F^t &\defeq \text{Treasury securities held by central bank at end of period } t \\
+\TGA^t &\defeq \text{Treasury General Account at end of period } t
+\end{align}
+
+\begin{definition}[Multi-Period Net Financial Assets]
+Private net financial assets at the end of period $t$ are
+\[
+\NFA^t_{\text{Private}} \defeq R^t + B_H^t.
+\]
+\end{definition}
+
+\subsection{Interest Payments as Flow Variables}
+
+Let $i_r^t$ denote the interest rate paid on reserves during period $t$, and $i_b^t$ the interest rate on Treasury securities. Total interest payments from the public sector to the private sector during period $t$ are:
+\begin{equation}
+\label{eq:interest-flows}
+\text{Interest}^t = i_r^t \cdot R^{t-1} + i_b^t \cdot B_H^{t-1}.
+\end{equation}
+
+\begin{remark}
+We assume interest accrues on beginning-of-period stocks and is paid at the end of the period. This is a discrete-time approximation; continuous-time models (Keen-style ODEs) would use differential equations.
+\end{remark}
+
+\subsection{Recursive Balance Sheet Updates}
+
+The balance sheets evolve according to:
+\begin{align}
+D^t &= D^{t-1} + \text{Spending}^t - \text{Taxes}^t + \text{Interest}^t + \text{(other flows)} \label{eq:deposits-recursive} \\
+R^t &= R^{t-1} + \text{Spending}^t - \text{Taxes}^t + \text{Interest}^t + \text{(bond ops, QE/QT)} \label{eq:reserves-recursive}
+\end{align}
+
+\begin{proposition}[Interest Payments Increase Nominal Deficit]
+\label{prop:interest-deficit}
+Holding primary spending and taxes fixed, an increase in interest rates $i_r$ or $i_b$ mechanically increases the nominal fiscal deficit through the interest channel:
+\[
+\text{Nominal Deficit}^t = (G^t + \text{Interest}^t) - T^t.
+\]
+When debt stocks are large relative to GDP, this interest component can dominate.
+\end{proposition}
+
+\subsection{Real vs.\ Nominal Deficits}
+
+\begin{definition}[Real Deficit]
+Let $\pi^t$ denote the inflation rate during period $t$. The \emph{real deficit} adjusts for the erosion of the real value of outstanding debt:
+\[
+\text{Real Deficit}^t \defeq \text{Nominal Deficit}^t - \pi^t \cdot (R^{t-1} + B_H^{t-1} + B_F^{t-1}).
+\]
+\end{definition}
+
+\begin{remark}[Mosler's Observation]
+Warren Mosler has emphasized that when debt/GDP ratios are high and interest payments constitute a large share of government spending, \emph{raising} interest rates can be \emph{inflationary} via the deficit channel: higher $i$ increases nominal deficits, which (if accommodated) adds spending power to the private sector. Conversely, \emph{lowering} rates may reduce inflationary pressure by shrinking the deficit.
+
+This stands in contrast to the conventional wisdom that higher rates are always disinflationary. The channel depends critically on the \emph{real} deficit response, not just nominal interest costs.
+\end{remark}
+
+\subsection{Outline of Key Results (To Be Derived)}
+
+In the following subsections, we will:
+\begin{enumerate}
+    \item Formalize the period-by-period balance sheet updates as matrix equations.
+    \item Derive the condition under which a rate hike increases the \emph{real} deficit (accounting for induced inflation).
+    \item Show numerical examples with high debt/GDP scenarios matching empirical context from recent policy debates \cite{reuters2022,cnbc2022,bloomberg2024}.
+    \item Illustrate multi-period trajectories in the interactive application.
+\end{enumerate}
 
 \section{References}
 
 \begin{itemize}
     \item Godley, W., \& Lavoie, M. (2007). \textit{Monetary Economics: An Integrated Approach to Credit, Money, Income, Production and Wealth}. Palgrave Macmillan.
-    \item Mosler, W. (1993--2010). \textit{Soft Currency Economics} and related papers.
-    \item Kelton, S. (2020). \textit{The Deficit Myth: Modern Monetary Theory and the Birth of the People's Economy}. PublicAffairs.
-    \item Keen, S. (2011). \textit{Debunking Economics: The Naked Emperor Dethroned?} Zed Books.
+    \item Kelton, S. (2020). \textit{The Deficit Myth}. PublicAffairs.
+    \item Keen, S. (2011). \textit{Debunking Economics}. Zed Books.
+    \item Mosler, W. (various). \textit{Soft Currency Economics} and related papers.
+    \item \label{reuters2022} ``Central banks will fail to tame inflation without better fiscal policy, study says,'' Reuters, August 27, 2022. \url{https://www.reuters.com/markets/us/central-banks-will-fail-tame-inflation-without-better-fiscal-policy-study-says-2022-08-27/}
+    \item \label{cnbc2022} ``Joseph Stiglitz thinks further Fed rate hikes could make inflation worse,'' CNBC, September 2, 2022. \url{https://www.cnbc.com/amp/2022/09/02/joseph-stiglitz-thinks-further-fed-rate-hikes-could-make-inflation-worse.html}
+    \item \label{bloomberg2024} ``Warren Mosler Explains Why High Interest Rates Might Fan Inflation,'' Bloomberg, July 9, 2024. \url{https://www.bloomberg.com/news/articles/2024-07-09/warren-mosler-explains-why-high-interest-rates-might-fan-inflation}
 \end{itemize}
 
 \end{document}
