@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingUp, Play, RotateCcw, Activity } from 'lucide-react';
+import { runMultiPeriodSimulation } from './sfc/multiPeriod';
 
 const formatBillions = (value) => {
   const abs = Math.abs(value);
@@ -73,50 +74,7 @@ export default function MultiPeriodSim() {
   const [simResults, setSimResults] = useState(null);
 
   const runSimulation = () => {
-    const { numPeriods, initialGdp, initialDebt, initialReserves, initialBondsHh, primaryBalance, interestRate, inflationElasticity } = config;
-
-    const results = [];
-    let R = initialReserves;
-    let Bh = initialBondsHh;
-    let Bf = initialDebt - R - Bh;
-    let nomGdp = initialGdp;
-
-    for (let t = 0; t <= numPeriods; t++) {
-      const totalDebt = R + Bh + Bf;
-      const debtGdpRatio = totalDebt / nomGdp;
-
-      // Interest payments
-      const interestPayments = interestRate * (R + Bh);
-
-      // Nominal deficit = primary balance + interest
-      const nominalDeficit = primaryBalance + interestPayments;
-
-      // Inflation depends on nominal deficit (simple linear model)
-      const inflation = Math.max(0.01, inflationElasticity * (nominalDeficit / nomGdp));
-
-      // Real deficit = nominal deficit - inflation erosion of debt
-      const realDeficit = nominalDeficit - inflation * totalDebt;
-
-      // Update stocks
-      R += nominalDeficit;
-      nomGdp *= (1 + inflation);
-
-      results.push({
-        period: t,
-        R,
-        Bh,
-        Bf,
-        totalDebt,
-        nomGdp,
-        debtGdpRatio,
-        interestPayments,
-        nominalDeficit,
-        inflation,
-        realDeficit
-      });
-    }
-
-    setSimResults(results);
+    setSimResults(runMultiPeriodSimulation(config));
   };
 
   const applyScenario = (scenarioName) => {
@@ -290,7 +248,7 @@ export default function MultiPeriodSim() {
             <div className="rounded-xl border border-slate-200 bg-white/70 px-3 py-2">
               <p className="text-xs text-slate-500">Bonds (Fed)</p>
               <p className="text-sm font-semibold text-slate-900">
-                {formatBillions(config.initialDebt - config.initialReserves - config.initialBondsHh)}
+                {formatBillions(Math.max(0, config.initialDebt - config.initialReserves - config.initialBondsHh))}
               </p>
             </div>
           </div>

@@ -19,6 +19,16 @@ import {
   TrendingUp
 } from 'lucide-react';
 import MultiPeriodSim from './MultiPeriodSim';
+import {
+  DEFAULT_TGA_TARGET,
+  applyBankCredit as applyBankCreditOp,
+  applyBondIssuance as applyBondIssuanceOp,
+  applyFiscal as applyFiscalOp,
+  applyQeSwap as applyQeSwapOp,
+  applyQtSwap as applyQtSwapOp,
+  computeDerived,
+  previewFiscal
+} from './sfc/ledger';
 
 const INITIAL_STOCKS = {
   deposits: 4000,
@@ -29,7 +39,7 @@ const INITIAL_STOCKS = {
   tga: 200
 };
 
-const TGA_TARGET = 200;
+const TGA_TARGET = DEFAULT_TGA_TARGET;
 const BASE_URL = import.meta.env.BASE_URL || '/';
 const TECHNICAL_PDF_URL = `${BASE_URL}docs/sfc-monetary-operations.pdf`;
 const TECHNICAL_TEX_URL = `${BASE_URL}docs/sfc-monetary-operations.tex`;
@@ -205,153 +215,55 @@ function SFCMonetaryLab() {
   const maxQtSwap = Math.min(inputs.qeSwap, stocks.bondsCb, stocks.deposits, stocks.reserves);
 
   const fiscalPreview = useMemo(() => {
-    const depositsAfterSpend = stocks.deposits + inputs.fiscalSpend;
-    const reservesAfterSpend = stocks.reserves + inputs.fiscalSpend;
-    const tax = Math.min(inputs.taxes, depositsAfterSpend, reservesAfterSpend);
-    const depositsAfterTax = depositsAfterSpend - tax;
-    const reservesAfterTax = reservesAfterSpend - tax;
-    const tgaAfter = stocks.tga - inputs.fiscalSpend + tax;
-    const gap = TGA_TARGET - tgaAfter;
-
-    let autoIssue = 0;
-    let autoRedeem = 0;
-
-    if (gap > 0) {
-      autoIssue = Math.min(gap, depositsAfterTax, reservesAfterTax);
-    } else if (gap < 0) {
-      autoRedeem = Math.min(-gap, stocks.bondsHouseholds);
-    }
-
-    return {
-      tax,
-      tgaAfter,
-      autoIssue,
-      autoRedeem
-    };
+    return previewFiscal({
+      stocks,
+      fiscalSpend: inputs.fiscalSpend,
+      taxes: inputs.taxes,
+      tgaTarget: TGA_TARGET,
+    });
   }, [stocks, inputs]);
 
   const derived = useMemo(() => {
-    const bankAssets = stocks.loans + stocks.reserves;
-    const bankEquity = bankAssets - stocks.deposits;
-
-    const householdAssets = stocks.deposits + stocks.bondsHouseholds;
-    const householdNetWorth = householdAssets - stocks.loans;
-
-    const treasuryAssets = stocks.tga;
-    const treasuryLiabilities = stocks.bondsHouseholds + stocks.bondsCb;
-    const treasuryNetWorth = treasuryAssets - treasuryLiabilities;
-
-    const cbAssets = stocks.bondsCb;
-    const cbLiabilities = stocks.reserves + stocks.tga;
-    const cbEquity = cbAssets - cbLiabilities;
-
-    const publicNetWorth = treasuryNetWorth + cbEquity;
-    const privateNfw = stocks.reserves + stocks.bondsHouseholds;
-    const identityGap = privateNfw + publicNetWorth;
-
-    return {
-      bankAssets,
-      bankEquity,
-      householdAssets,
-      householdNetWorth,
-      publicNetWorth,
-      treasuryNetWorth,
-      cbEquity,
-      privateNfw,
-      identityGap
-    };
+    return computeDerived(stocks);
   }, [stocks]);
 
   const applyBankCredit = () => {
-    let delta = inputs.bankCredit;
-    if (delta < 0) {
-      const maxRepay = Math.min(stocks.loans, stocks.deposits);
-      delta = Math.max(delta, -maxRepay);
-    }
-    setStocks((prev) => ({
-      ...prev,
-      loans: prev.loans + delta,
-      deposits: prev.deposits + delta
-    }));
-    setLastAction(`Horizontal money: net bank credit ${formatSigned(delta)} posted.`);
+    const { stocks: nextStocks, deltaApplied } = applyBankCreditOp(stocks, inputs.bankCredit);
+    setStocks(nextStocks);
+    setLastAction(`Horizontal money: net bank credit ${formatSigned(deltaApplied)} posted.`);
   };
 
   const applyFiscal = () => {
-    let deposits = stocks.deposits + inputs.fiscalSpend;
-    let reserves = stocks.reserves + inputs.fiscalSpend;
-    const maxTax = Math.min(deposits, reserves);
-    const tax = Math.min(inputs.taxes, maxTax);
-    deposits -= tax;
-    reserves -= tax;
-    let tga = stocks.tga - inputs.fiscalSpend + tax;
-    let bondsHouseholds = stocks.bondsHouseholds;
-    const gap = TGA_TARGET - tga;
-    let autoIssue = 0;
-    let autoRedeem = 0;
-
-    if (gap > 0) {
-      autoIssue = Math.min(gap, deposits, reserves);
-      deposits -= autoIssue;
-      reserves -= autoIssue;
-      tga += autoIssue;
-      bondsHouseholds += autoIssue;
-    } else if (gap < 0) {
-      autoRedeem = Math.min(-gap, bondsHouseholds);
-      deposits += autoRedeem;
-      reserves += autoRedeem;
-      tga -= autoRedeem;
-      bondsHouseholds -= autoRedeem;
-    }
-
-    setStocks((prev) => ({
-      ...prev,
-      deposits,
-      reserves,
-      tga,
-      bondsHouseholds
-    }));
+    const { stocks: nextStocks, taxApplied, autoIssue, autoRedeem } = applyFiscalOp(
+      stocks,
+      { fiscalSpend: inputs.fiscalSpend, taxes: inputs.taxes },
+      { tgaTarget: TGA_TARGET }
+    );
+    setStocks(nextStocks);
     const autoNote = autoIssue > 0
       ? ` Auto-issue ${formatBillions(autoIssue)} to target TGA.`
       : autoRedeem > 0
         ? ` Auto-redeem ${formatBillions(autoRedeem)} to target TGA.`
         : ' TGA already at target.';
-    setLastAction(`Vertical money: spending ${formatBillions(inputs.fiscalSpend)} | taxes ${formatBillions(tax)}.${autoNote}`);
+    setLastAction(`Vertical money: spending ${formatBillions(inputs.fiscalSpend)} | taxes ${formatBillions(taxApplied)}.${autoNote}`);
   };
 
   const applyBondIssuance = () => {
-    const maxIssue = Math.min(inputs.bondIssuance, stocks.deposits, stocks.reserves);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds + maxIssue,
-      deposits: prev.deposits - maxIssue,
-      reserves: prev.reserves - maxIssue,
-      tga: prev.tga + maxIssue
-    }));
-    setLastAction(`Bond immunization: reserves swapped into bonds ${formatBillions(maxIssue)}.`);
+    const { stocks: nextStocks, amountApplied } = applyBondIssuanceOp(stocks, inputs.bondIssuance);
+    setStocks(nextStocks);
+    setLastAction(`Bond immunization: reserves swapped into bonds ${formatBillions(amountApplied)}.`);
   };
 
   const applyQeSwap = () => {
-    const maxSwap = Math.min(inputs.qeSwap, stocks.bondsHouseholds);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds - maxSwap,
-      bondsCb: prev.bondsCb + maxSwap,
-      deposits: prev.deposits + maxSwap,
-      reserves: prev.reserves + maxSwap
-    }));
-    setLastAction(`QE asset swap: bonds swapped into reserves ${formatBillions(maxSwap)}.`);
+    const { stocks: nextStocks, amountApplied } = applyQeSwapOp(stocks, inputs.qeSwap);
+    setStocks(nextStocks);
+    setLastAction(`QE asset swap: bonds swapped into reserves ${formatBillions(amountApplied)}.`);
   };
 
   const applyQtSwap = () => {
-    const maxSwap = Math.min(inputs.qeSwap, stocks.bondsCb, stocks.deposits, stocks.reserves);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds + maxSwap,
-      bondsCb: prev.bondsCb - maxSwap,
-      deposits: prev.deposits - maxSwap,
-      reserves: prev.reserves - maxSwap
-    }));
-    setLastAction(`QT asset swap: reserves swapped into bonds ${formatBillions(maxSwap)}.`);
+    const { stocks: nextStocks, amountApplied } = applyQtSwapOp(stocks, inputs.qeSwap);
+    setStocks(nextStocks);
+    setLastAction(`QT asset swap: reserves swapped into bonds ${formatBillions(amountApplied)}.`);
   };
 
   const resetAll = () => {
