@@ -385,15 +385,151 @@ Warren Mosler has emphasized that when debt/GDP ratios are high and interest pay
 This stands in contrast to the conventional wisdom that higher rates are always disinflationary. The channel depends critically on the \emph{real} deficit response, not just nominal interest costs.
 \end{remark}
 
-\subsection{Outline of Key Results (To Be Derived)}
+\subsection{Period-by-Period Balance Sheet Matrices}
 
-In the following subsections, we will:
-\begin{enumerate}
-    \item Formalize the period-by-period balance sheet updates as matrix equations.
-    \item Derive the condition under which a rate hike increases the \emph{real} deficit (accounting for induced inflation).
-    \item Show numerical examples with high debt/GDP scenarios matching empirical context from recent policy debates \cite{reuters2022,cnbc2022,bloomberg2024}.
-    \item Illustrate multi-period trajectories in the interactive application.
-\end{enumerate}
+Define the state vector at the end of period $t$ as
+\[
+\mathbf{X}^t \defeq \begin{pmatrix} D^t \\ R^t \\ B_H^t \\ B_F^t \\ \TGA^t \end{pmatrix}.
+\]
+
+Flow variables during period $t$ include primary spending $G^t$, taxes $T^t$, and interest payments:
+\begin{align}
+\text{Interest}_r^t &= i_r^t \cdot R^{t-1}, \label{eq:int-reserves} \\
+\text{Interest}_b^t &= i_b^t \cdot B_H^{t-1}, \label{eq:int-bonds-hh} \\
+\text{Total Interest}^t &= \text{Interest}_r^t + \text{Interest}_b^t. \label{eq:total-int}
+\end{align}
+
+\begin{proposition}[Balance Sheet Evolution with Interest]
+\label{prop:multiperiod-evolution}
+Assuming no bond operations or QE/QT during period $t$, the balance sheets update as:
+\begin{align}
+D^t &= D^{t-1} + G^t - T^t + \text{Total Interest}^t, \label{eq:d-update} \\
+R^t &= R^{t-1} + G^t - T^t + \text{Total Interest}^t, \label{eq:r-update} \\
+B_H^t &= B_H^{t-1}, \label{eq:bh-update} \\
+B_F^t &= B_F^{t-1}, \label{eq:bf-update} \\
+\TGA^t &= \TGA^{t-1} - G^t + T^t - \text{Total Interest}^t. \label{eq:tga-update}
+\end{align}
+\end{proposition}
+
+\begin{proof}
+Interest payments are fiscal expenditures settled the same way as primary spending $G$: the central bank credits bank reserves and bank deposits rise. Thus equations \eqref{eq:d-update} and \eqref{eq:r-update} combine primary balance $(G^t - T^t)$ with interest. The TGA account drains by the same total in equation \eqref{eq:tga-update}.
+\end{proof}
+
+\subsection{Nominal Deficit Dynamics}
+
+\begin{definition}[Nominal Fiscal Deficit]
+The nominal deficit in period $t$ is
+\[
+\text{Deficit}_{\text{nom}}^t \defeq G^t + \text{Total Interest}^t - T^t.
+\]
+\end{definition}
+
+\begin{proposition}[Interest Rate Hikes Amplify Nominal Deficits]
+\label{prop:rate-hike-nominal}
+For fixed primary balance $G^t - T^t$ and debt stocks $(R^{t-1}, B_H^{t-1})$, the partial derivative of the nominal deficit with respect to the interest rate is
+\[
+\frac{\partial \text{Deficit}_{\text{nom}}^t}{\partial i_r^t} = R^{t-1}, \quad
+\frac{\partial \text{Deficit}_{\text{nom}}^t}{\partial i_b^t} = B_H^{t-1}.
+\]
+When debt stocks are large (e.g.\ $R + B_H \gg$ annual GDP), a 1 percentage point rate increase produces a large absolute increase in nominal spending.
+\end{proposition}
+
+\begin{proof}
+Direct differentiation of $\text{Deficit}_{\text{nom}}^t = G^t + i_r^t R^{t-1} + i_b^t B_H^{t-1} - T^t$ with respect to $i_r^t$ and $i_b^t$ yields the stated partials.
+\end{proof}
+
+\subsection{Real Deficit and the Inflation Feedback}
+
+\begin{definition}[Debt-to-GDP Ratio]
+Let $Y^t$ denote nominal GDP in period $t$. Define
+\[
+d^t \defeq \frac{R^t + B_H^t + B_F^t}{Y^t}.
+\]
+\end{definition}
+
+Recall from equation \eqref{eq:interest-flows} that the real deficit subtracts inflation-induced erosion of real debt value:
+\[
+\text{Deficit}_{\text{real}}^t = \text{Deficit}_{\text{nom}}^t - \pi^t \cdot (R^{t-1} + B_H^{t-1} + B_F^{t-1}).
+\]
+
+\begin{proposition}[Paradoxical Real Deficit Response]
+\label{prop:paradox}
+Suppose inflation $\pi^t$ responds positively to the nominal deficit (a standard Phillips-curve-like relationship). Then when the debt stock $R^{t-1} + B_H^{t-1} + B_F^{t-1}$ is large, a rate hike can \emph{reduce} the real deficit even as it increases the nominal deficit, if the induced inflation increase is strong enough.
+
+Formally, if
+\[
+\frac{d\pi^t}{di^t} \cdot (R^{t-1} + B_H^{t-1} + B_F^{t-1}) > R^{t-1} + B_H^{t-1},
+\]
+then $\frac{d \text{Deficit}_{\text{real}}^t}{di^t} < 0$.
+\end{proposition}
+
+\begin{proof}
+Differentiate the real deficit with respect to the average interest rate $i^t$ (assuming $i_r^t \approx i_b^t \approx i^t$ for simplicity):
+\begin{align*}
+\frac{d \text{Deficit}_{\text{real}}^t}{di^t}
+&= \frac{d \text{Deficit}_{\text{nom}}^t}{di^t} - \frac{d\pi^t}{di^t} \cdot (R^{t-1} + B_H^{t-1} + B_F^{t-1}) \\
+&= (R^{t-1} + B_H^{t-1}) - \frac{d\pi^t}{di^t} \cdot (R^{t-1} + B_H^{t-1} + B_F^{t-1}).
+\end{align*}
+If $\frac{d\pi^t}{di^t}$ is large enough (i.e., deficit spending is highly inflationary and debt is large), the second term dominates and the derivative is negative.
+\end{proof}
+
+\begin{remark}[Mosler's Insight]
+This formalizes Mosler's observation: when debt/GDP is high, rate hikes add so much nominal spending via interest that inflation rises enough to erode real debt value faster than the nominal deficit increases. The net effect can be a \emph{lower} real deficit and \emph{higher} inflation, opposite to conventional monetary policy expectations \cite{bloomberg2024}.
+\end{remark}
+
+\subsection{Numerical Example: High Debt Scenario}
+
+Consider a stylized economy with:
+\begin{align*}
+Y^0 &= 25{,}000 \text{ billion (GDP)}, \\
+R^0 &= 3{,}000, \quad B_H^0 = 20{,}000, \quad B_F^0 = 7{,}000, \\
+d^0 &= \frac{30{,}000}{25{,}000} = 1.2 \text{ (debt/GDP = 120\%)}.
+\end{align*}
+
+Assume primary balance is zero: $G^t - T^t = 0$ for all $t$.
+
+\textbf{Scenario A (Low rates):} $i^t = 1\%$.
+\[
+\text{Interest}^1 = 0.01 \cdot 23{,}000 = 230.
+\]
+If this produces $\pi^1 = 2\%$, then
+\[
+\text{Deficit}_{\text{real}}^1 = 230 - 0.02 \cdot 30{,}000 = 230 - 600 = -370 \text{ (real surplus)}.
+\]
+
+\textbf{Scenario B (High rates):} $i^t = 5\%$.
+\[
+\text{Interest}^1 = 0.05 \cdot 23{,}000 = 1{,}150.
+\]
+If this produces $\pi^1 = 6\%$ (higher deficit $\Rightarrow$ higher inflation), then
+\[
+\text{Deficit}_{\text{real}}^1 = 1{,}150 - 0.06 \cdot 30{,}000 = 1{,}150 - 1{,}800 = -650 \text{ (larger real surplus)}.
+\]
+
+Thus the rate hike from 1\% to 5\% increased nominal deficit by $1{,}150 - 230 = 920$ but \emph{increased} the real surplus by $650 - 370 = 280$ due to inflation erosion. This is the deficit channel in action \cite{cnbc2022,reuters2022}.
+
+\subsection{Multi-Period Trajectories}
+
+For $t=0,1,2,\ldots,T$, one can iterate equations \eqref{eq:d-update}--\eqref{eq:tga-update} with evolving interest rates $i^t$ and inflation $\pi^t$. The interactive application (Section \ref{sec:app-integration}) will allow users to configure scenarios and visualize:
+\begin{itemize}
+    \item Nominal vs.\ real deficit paths under rate hike vs.\ rate cut.
+    \item Debt/GDP ratio evolution.
+    \item Inflation trajectories induced by deficit feedback.
+\end{itemize}
+
+\subsection{Connection to Interactive Application}
+\label{sec:app-integration}
+
+The React application will implement a \texttt{MultiPeriodSim} component that:
+\begin{itemize}
+    \item Maintains state arrays for $t=0,\ldots,T$ (default $T=10$).
+    \item Computes $\text{Interest}^t$, $\text{Deficit}_{\text{nom}}^t$, $\text{Deficit}_{\text{real}}^t$ each period.
+    \item Updates $R^t, B_H^t, D^t$ recursively per Proposition \ref{prop:multiperiod-evolution}.
+    \item Displays charts of nominal/real deficits, inflation, debt/GDP over time.
+    \item Allows user to configure: initial debt/GDP, interest rate path (constant, ramp, shock), inflation elasticity.
+\end{itemize}
+
+This provides an interactive demonstration of Propositions \ref{prop:rate-hike-nominal} and \ref{prop:paradox}.
 
 \section{References}
 
