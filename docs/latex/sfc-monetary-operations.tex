@@ -45,7 +45,7 @@ Sectoral Balances and Why ``Loanable Funds'' Fails as Accounting}
 \maketitle
 
 \begin{abstract}
-We present a compact Stock-Flow Consistent (SFC) accounting model for monetary operations in a modern fiat system with four consolidated sectors: Treasury, central bank, commercial banking system, and households (non-bank private sector). In this model, bank lending creates deposits endogenously (``horizontal money''), fiscal deficits add net financial assets (``vertical money''), and bond operations and QE/QT are portfolio swaps that change the composition of private portfolios without changing private net financial assets. The document is written to match an accompanying interactive web application that posts stylized transactions and updates balance sheets in real time.
+We present a Stock-Flow Consistent (SFC) accounting model for monetary operations in a modern fiat system with four consolidated sectors: Treasury, central bank, commercial banking system, and households (non-bank private sector). In this model, bank lending creates deposits endogenously (``horizontal money''), fiscal deficits add net financial assets (``vertical money''), and bond operations and QE/QT are portfolio swaps that change the composition of private portfolios without changing private net financial assets. We extend this framework to multi-period dynamics, showing how interest payments on government debt create a feedback channel between interest rates and deficits. When debt-to-GDP ratios are high, we prove that raising interest rates can increase inflation via the deficit channel---a result that formalizes Warren Mosler's observation and contrasts with conventional monetary policy wisdom. The document is written to match two accompanying interactive web applications that demonstrate both static operations and multi-period trajectories in real time.
 \end{abstract}
 
 \tableofcontents
@@ -86,7 +86,7 @@ B_F &\defeq \text{Treasury securities held by the central bank} \\
 \end{align}
 
 \begin{remark}
-This model is intentionally narrow: it abstracts from production, prices, interest flows, bank capital regulation, foreign trade, and non-financial assets. Those are important in full macro models; here we isolate balance sheet mechanics.
+This model is intentionally narrow in its static version (Sections 2--5): it abstracts from production, prices, interest flows, bank capital regulation, foreign trade, and non-financial assets, focusing solely on balance sheet mechanics. Section 6 extends the model to include interest payments and multi-period dynamics while maintaining the same sectoral structure.
 \end{remark}
 
 \subsection{Notation: Net Worth vs.\ Net Financial Assets}
@@ -394,6 +394,8 @@ Define the state vector at the end of period $t$ as
 \mathbf{X}^t \defeq \begin{pmatrix} D^t \\ R^t \\ B_H^t \\ B_F^t \\ \TGA^t \end{pmatrix}.
 \]
 
+Figure \ref{fig:multiperiod-stocks} illustrates how stocks evolve across multiple periods with interest payments flowing into reserves and deposits each period.
+
 Flow variables during period $t$ include primary spending $G^t$, taxes $T^t$, and interest payments:
 \begin{align}
 \text{Interest}_r^t &= i_r^t \cdot R^{t-1}, \label{eq:int-reserves} \\
@@ -508,7 +510,7 @@ If this produces $\pi^1 = 6\%$ (higher deficit $\Rightarrow$ higher inflation), 
 \text{Deficit}_{\text{real}}^1 = 1{,}150 - 0.06 \cdot 30{,}000 = 1{,}150 - 1{,}800 = -650 \text{ (larger real surplus)}.
 \]
 
-Thus the rate hike from 1\% to 5\% increased nominal deficit by $1{,}150 - 230 = 920$ but \emph{increased} the real surplus by $650 - 370 = 280$ due to inflation erosion. This is the deficit channel in action \cite{cnbc2022,reuters2022}.
+Thus the rate hike from 1\% to 5\% increased nominal deficit by $1{,}150 - 230 = 920$ but \emph{increased} the real surplus by $650 - 370 = 280$ due to inflation erosion. This is the deficit channel in action \cite{cnbc2022,reuters2022}. Figure \ref{fig:deficit-trajectories} visualizes these divergent trajectories over multiple periods.
 
 \subsection{Multi-Period Trajectories}
 
