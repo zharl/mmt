@@ -120,6 +120,20 @@ This is why Modern Monetary Theory emphasizes that:
 - Real resource constraints matter more than nominal deficit levels
 - Inflation control requires coordinating monetary and fiscal policy
 
+## Cross-Theoretical Convergence
+
+Remarkably, this isn't just an MMT observation. **John Cochrane**, a University of Chicago economist working within the New Keynesian framework, reaches the same conclusion in his 2023 book *The Fiscal Theory of the Price Level*:
+
+> "Fiscal policy will place greater constraints on high real interest rates as an inflation-fighting strategy. In 1980, the debt-to-GDP ratio was 25%. In 2021 it was 100%, and rising swiftly. **First, then, the government will have to pay four times larger real interest costs on the debt.** At 100% debt to GDP, 5% real interest rates mean 5% of GDP additional deficit, $1 trillion 2021 dollars, for each year that such real interest rates continue."
+
+> "As Section 17.4.2 emphasized, **without such an accompanying fiscal policy, higher interest rates cannot lower inflation.**"
+
+> "**Without fiscal backing, the monetary stabilization will fail. In a fiscally-driven inflation, it can happen that the central bank raises rates to fight the inflation, which raises the deficit via interest costs, and only makes inflation worse.**"
+
+Cochrane approaches this from the Fiscal Theory of the Price Level (FTPL), while Mosler approaches it from Modern Monetary Theory and Stock-Flow Consistent accounting. Yet both arrive at the identical policy conclusion: **when debt is high, raising rates can be inflationary via the fiscal channel**.
+
+This theoretical convergence is significant—it suggests the deficit channel is a robust empirical phenomenon, not an artifact of any particular modeling framework.
+
 ## Caveats and Nuances
 
 This mechanism doesn't mean rate hikes are *always* inflationary. The strength of the deficit channel depends on:
@@ -128,6 +142,7 @@ This mechanism doesn't mean rate hikes are *always* inflationary. The strength o
 - **Bondholders' marginal propensity to spend**: If they don't spend the interest income, less inflationary
 - **Supply-side factors**: Cost-push inflation has different dynamics
 - **Expectations**: Forward-looking behavior can short-circuit the mechanism
+- **Fiscal response**: As Cochrane emphasizes, the effect depends on whether fiscal policy accommodates or offsets the interest cost increase
 
 But when debt is $30+ trillion and climbing, we can no longer ignore the fiscal consequences of monetary policy.
 
@@ -147,7 +162,9 @@ The interactive tools and mathematical framework we've built demonstrate this ri
 - [SFC Operations Lab](/mmt/#/)
 
 **References:**
+- Cochrane, J. H. (2023). *The Fiscal Theory of the Price Level*. Princeton University Press.
 - Mosler, W. (2024). "Warren Mosler Explains Why High Interest Rates Might Fan Inflation." *Bloomberg*.
 - Stiglitz, J. (2022). "Joseph Stiglitz thinks further Fed rate hikes could make inflation worse." *CNBC*.
 - Reuters (2022). "Central banks will fail to tame inflation without better fiscal policy, study says."
+- McLeay, M., Radia, A., & Thomas, R. (2014). "Money creation in the modern economy." *Bank of England Quarterly Bulletin*, Q1 2014.
 - Godley, W., & Lavoie, M. (2007). *Monetary Economics: An Integrated Approach to Credit, Money, Income, Production and Wealth*. Palgrave Macmillan.

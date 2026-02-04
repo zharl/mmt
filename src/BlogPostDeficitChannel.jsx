@@ -296,6 +296,45 @@ Real deficit:          -$300B (surplus!)`}
         </Callout>
       </div>
 
+      <div className="card-surface bg-gradient-to-br from-slate-50 to-slate-100">
+        <h2 className="font-display text-2xl text-slate-900 mb-4">Cross-Theoretical Convergence</h2>
+        <p className="text-slate-700 leading-relaxed mb-4">
+          Remarkably, this isn't just an MMT observation. <strong>John Cochrane</strong>, a University of Chicago
+          economist working within the New Keynesian framework, reaches the same conclusion in his 2023 book{' '}
+          <em>The Fiscal Theory of the Price Level</em>:
+        </p>
+
+        <div className="rounded-2xl border-2 border-slate-300 bg-white p-4 space-y-3 text-sm text-slate-700">
+          <p className="italic">
+            "Fiscal policy will place greater constraints on high real interest rates as an inflation-fighting
+            strategy. In 1980, the debt-to-GDP ratio was 25%. In 2021 it was 100%, and rising swiftly.
+            <strong className="text-slate-900"> First, then, the government will have to pay four times larger
+            real interest costs on the debt.</strong> At 100% debt to GDP, 5% real interest rates mean 5% of GDP
+            additional deficit, $1 trillion 2021 dollars, for each year that such real interest rates continue."
+          </p>
+          <p className="italic">
+            "As Section 17.4.2 emphasized, <strong className="text-slate-900">without such an accompanying fiscal policy,
+            higher interest rates cannot lower inflation.</strong>"
+          </p>
+          <p className="italic">
+            "<strong className="text-slate-900">Without fiscal backing, the monetary stabilization will fail.
+            In a fiscally-driven inflation, it can happen that the central bank raises rates to fight the inflation,
+            which raises the deficit via interest costs, and only makes inflation worse.</strong>"
+          </p>
+        </div>
+
+        <p className="text-slate-700 leading-relaxed mt-4">
+          Cochrane approaches this from the Fiscal Theory of the Price Level (FTPL), while Mosler approaches it
+          from Modern Monetary Theory and Stock-Flow Consistent accounting. Yet both arrive at the identical
+          policy conclusion: <strong>when debt is high, raising rates can be inflationary via the fiscal channel</strong>.
+        </p>
+
+        <p className="text-slate-700 leading-relaxed">
+          This theoretical convergence is significant—it suggests the deficit channel is a robust empirical
+          phenomenon, not an artifact of any particular modeling framework.
+        </p>
+      </div>
+
       <div className="card-surface">
         <h2 className="font-display text-2xl text-slate-900 mb-4">Caveats and Nuances</h2>
         <p className="text-slate-700 leading-relaxed mb-3">
@@ -307,6 +346,7 @@ Real deficit:          -$300B (surplus!)`}
           <li><strong>Bondholders' marginal propensity to spend</strong>: If they don't spend the interest income, less inflationary</li>
           <li><strong>Supply-side factors</strong>: Cost-push inflation has different dynamics</li>
           <li><strong>Expectations</strong>: Forward-looking behavior can short-circuit the mechanism</li>
+          <li><strong>Fiscal response</strong>: As Cochrane emphasizes, the effect depends on whether fiscal policy accommodates or offsets the interest cost increase</li>
         </ul>
         <p className="text-slate-700 leading-relaxed mt-4">
           But when debt is $30+ trillion and climbing, we can no longer ignore the fiscal consequences of monetary policy.
@@ -351,6 +391,7 @@ Real deficit:          -$300B (surplus!)`}
       <div className="card-surface text-xs text-slate-600">
         <h4 className="font-semibold text-slate-700 mb-2">References</h4>
         <ul className="space-y-1">
+          <li>Cochrane, J. H. (2023). <em>The Fiscal Theory of the Price Level</em>. Princeton University Press.</li>
           <li>Mosler, W. (2024). "Warren Mosler Explains Why High Interest Rates Might Fan Inflation." <em>Bloomberg</em>.</li>
           <li>Stiglitz, J. (2022). "Joseph Stiglitz thinks further Fed rate hikes could make inflation worse." <em>CNBC</em>.</li>
           <li>Reuters (2022). "Central banks will fail to tame inflation without better fiscal policy, study says."</li>
