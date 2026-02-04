@@ -19,6 +19,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import MultiPeriodSim from './MultiPeriodSim';
+import BlogPostDeficitChannel from './BlogPostDeficitChannel';
 import {
   DEFAULT_TGA_TARGET,
   applyBankCredit as applyBankCreditOp,
@@ -664,6 +665,12 @@ const DocsPage = () => (
 
 const BLOG_POSTS = [
   {
+    slug: 'interest-rates-and-the-deficit-channel',
+    title: 'The Paradox of Interest Rates: Why Higher Rates Might Fuel Inflation',
+    excerpt: 'When government debt is large, raising interest rates can increase inflation via the deficit channel. Explore Mosler\'s counterintuitive insight with interactive simulations.',
+    date: 'February 2026',
+  },
+  {
     slug: 'sfc-monetary-operations',
     title: 'Money as Bookkeeping: An SFC Tour of Loans, Deficits, Bonds, and QE',
     excerpt: 'A plain-English companion to the balance-sheet lab and the technical note.',
@@ -823,6 +830,8 @@ export default function App() {
       content = <BlogIndexPage />;
     } else if (slug === 'sfc-monetary-operations') {
       content = <BlogPostSfcMonetaryOperations />;
+    } else if (slug === 'interest-rates-and-the-deficit-channel') {
+      content = <BlogPostDeficitChannel />;
     } else {
       content = <NotFoundPage />;
     }
