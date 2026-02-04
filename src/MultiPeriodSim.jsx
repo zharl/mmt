@@ -118,6 +118,10 @@ export default function MultiPeriodSim() {
             reduce it. Meanwhile, the inflation erodes real debt value faster than the nominal deficit grows, producing a
             <em>lower</em> real deficit.
           </p>
+          <p className="mt-3 text-xs italic border-t border-amber-300 pt-3">
+            <strong>Cochrane (2023):</strong> "At 100% debt to GDP, 5% real interest rates mean 5% of GDP
+            additional deficit, $1 trillion 2021 dollars, for each year that such real interest rates continue."
+          </p>
         </div>
       </div>
 
@@ -324,26 +328,42 @@ export default function MultiPeriodSim() {
       )}
 
       <div className="card-surface">
-        <h3 className="text-sm font-semibold text-slate-900 mb-3">References</h3>
-        <div className="space-y-2 text-xs text-slate-600">
-          <p>
-            <a href="https://www.bloomberg.com/news/articles/2024-07-09/warren-mosler-explains-why-high-interest-rates-might-fan-inflation"
-               className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
-              Warren Mosler Explains Why High Interest Rates Might Fan Inflation (Bloomberg, 2024)
+        <h3 className="text-sm font-semibold text-slate-900 mb-3">Theoretical Background</h3>
+        <div className="space-y-3">
+          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+            <p className="text-xs font-semibold text-slate-900 mb-1">Fiscal Theory of the Price Level</p>
+            <p className="text-xs text-slate-700 mb-2">
+              John Cochrane (2023): "Without such an accompanying fiscal policy, higher interest rates cannot
+              lower inflation... In a fiscally-driven inflation, it can happen that the central bank raises rates
+              to fight the inflation, which raises the deficit via interest costs, and only makes inflation worse."
+            </p>
+            <a href="https://www.johnhcochrane.com/research-all/the-fiscal-theory-of-the-price-level-1"
+               className="text-xs text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              The Fiscal Theory of the Price Level (Princeton University Press)
             </a>
-          </p>
-          <p>
-            <a href="https://www.cnbc.com/amp/2022/09/02/joseph-stiglitz-thinks-further-fed-rate-hikes-could-make-inflation-worse.html"
-               className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
-              Joseph Stiglitz thinks further Fed rate hikes could make inflation worse (CNBC, 2022)
-            </a>
-          </p>
-          <p>
-            <a href="https://www.reuters.com/markets/us/central-banks-will-fail-tame-inflation-without-better-fiscal-policy-study-says-2022-08-27/"
-               className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
-              Central banks will fail to tame inflation without better fiscal policy (Reuters, 2022)
-            </a>
-          </p>
+          </div>
+
+          <div className="space-y-2 text-xs text-slate-600">
+            <p className="font-semibold text-slate-700">Related Sources:</p>
+            <p>
+              <a href="https://www.bloomberg.com/news/articles/2024-07-09/warren-mosler-explains-why-high-interest-rates-might-fan-inflation"
+                 className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                Warren Mosler: Why High Interest Rates Might Fan Inflation (Bloomberg, 2024)
+              </a>
+            </p>
+            <p>
+              <a href="https://www.cnbc.com/amp/2022/09/02/joseph-stiglitz-thinks-further-fed-rate-hikes-could-make-inflation-worse.html"
+                 className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                Joseph Stiglitz: Further Fed rate hikes could make inflation worse (CNBC, 2022)
+              </a>
+            </p>
+            <p>
+              <a href="https://www.reuters.com/markets/us/central-banks-will-fail-tame-inflation-without-better-fiscal-policy-study-says-2022-08-27/"
+                 className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                Central banks will fail without better fiscal policy (Reuters, 2022)
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
