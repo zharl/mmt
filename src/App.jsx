@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import {
   Landmark,
@@ -12,8 +12,23 @@ import {
   RefreshCw,
   Activity,
   CircleDollarSign,
-  BadgeDollarSign
+  BadgeDollarSign,
+  BookOpen,
+  FileText,
+  Home,
+  TrendingUp
 } from 'lucide-react';
+import MultiPeriodSim from './MultiPeriodSim';
+import {
+  DEFAULT_TGA_TARGET,
+  applyBankCredit as applyBankCreditOp,
+  applyBondIssuance as applyBondIssuanceOp,
+  applyFiscal as applyFiscalOp,
+  applyQeSwap as applyQeSwapOp,
+  applyQtSwap as applyQtSwapOp,
+  computeDerived,
+  previewFiscal
+} from './sfc/ledger';
 
 const INITIAL_STOCKS = {
   deposits: 4000,
@@ -24,7 +39,10 @@ const INITIAL_STOCKS = {
   tga: 200
 };
 
-const TGA_TARGET = 200;
+const TGA_TARGET = DEFAULT_TGA_TARGET;
+const BASE_URL = import.meta.env.BASE_URL || '/';
+const TECHNICAL_PDF_URL = `${BASE_URL}docs/sfc-monetary-operations.pdf`;
+const TECHNICAL_TEX_URL = `${BASE_URL}docs/sfc-monetary-operations.tex`;
 
 const formatBillions = (value) => {
   const abs = Math.abs(value);
@@ -36,6 +54,24 @@ const formatBillions = (value) => {
 };
 
 const formatSigned = (value) => (value >= 0 ? `+${formatBillions(value)}` : formatBillions(value));
+
+const normalizeHashPath = (hash) => {
+  const raw = (hash || '').replace(/^#/, '');
+  if (!raw) return '/';
+  return raw.startsWith('/') ? raw : `/${raw}`;
+};
+
+const useHashPath = () => {
+  const [path, setPath] = useState(() => normalizeHashPath(window.location.hash));
+
+  useEffect(() => {
+    const onChange = () => setPath(normalizeHashPath(window.location.hash));
+    window.addEventListener('hashchange', onChange);
+    return () => window.removeEventListener('hashchange', onChange);
+  }, []);
+
+  return path;
+};
 
 const SectionTitle = ({ icon: Icon, title, subtitle }) => (
   <div className="flex items-start gap-3">
@@ -163,7 +199,7 @@ const BalanceSheetCard = ({ title, icon: Icon, tone, assets, liabilities, equity
   );
 };
 
-export default function SFCMonetaryLab() {
+function SFCMonetaryLab() {
   const [stocks, setStocks] = useState(INITIAL_STOCKS);
   const [inputs, setInputs] = useState({
     bankCredit: 200,
@@ -179,153 +215,55 @@ export default function SFCMonetaryLab() {
   const maxQtSwap = Math.min(inputs.qeSwap, stocks.bondsCb, stocks.deposits, stocks.reserves);
 
   const fiscalPreview = useMemo(() => {
-    const depositsAfterSpend = stocks.deposits + inputs.fiscalSpend;
-    const reservesAfterSpend = stocks.reserves + inputs.fiscalSpend;
-    const tax = Math.min(inputs.taxes, depositsAfterSpend, reservesAfterSpend);
-    const depositsAfterTax = depositsAfterSpend - tax;
-    const reservesAfterTax = reservesAfterSpend - tax;
-    const tgaAfter = stocks.tga - inputs.fiscalSpend + tax;
-    const gap = TGA_TARGET - tgaAfter;
-
-    let autoIssue = 0;
-    let autoRedeem = 0;
-
-    if (gap > 0) {
-      autoIssue = Math.min(gap, depositsAfterTax, reservesAfterTax);
-    } else if (gap < 0) {
-      autoRedeem = Math.min(-gap, stocks.bondsHouseholds);
-    }
-
-    return {
-      tax,
-      tgaAfter,
-      autoIssue,
-      autoRedeem
-    };
+    return previewFiscal({
+      stocks,
+      fiscalSpend: inputs.fiscalSpend,
+      taxes: inputs.taxes,
+      tgaTarget: TGA_TARGET,
+    });
   }, [stocks, inputs]);
 
   const derived = useMemo(() => {
-    const bankAssets = stocks.loans + stocks.reserves;
-    const bankEquity = bankAssets - stocks.deposits;
-
-    const householdAssets = stocks.deposits + stocks.bondsHouseholds;
-    const householdNetWorth = householdAssets - stocks.loans;
-
-    const treasuryAssets = stocks.tga;
-    const treasuryLiabilities = stocks.bondsHouseholds + stocks.bondsCb;
-    const treasuryNetWorth = treasuryAssets - treasuryLiabilities;
-
-    const cbAssets = stocks.bondsCb;
-    const cbLiabilities = stocks.reserves + stocks.tga;
-    const cbEquity = cbAssets - cbLiabilities;
-
-    const publicNetWorth = treasuryNetWorth + cbEquity;
-    const privateNfw = stocks.reserves + stocks.bondsHouseholds;
-    const identityGap = privateNfw + publicNetWorth;
-
-    return {
-      bankAssets,
-      bankEquity,
-      householdAssets,
-      householdNetWorth,
-      publicNetWorth,
-      treasuryNetWorth,
-      cbEquity,
-      privateNfw,
-      identityGap
-    };
+    return computeDerived(stocks);
   }, [stocks]);
 
   const applyBankCredit = () => {
-    let delta = inputs.bankCredit;
-    if (delta < 0) {
-      const maxRepay = Math.min(stocks.loans, stocks.deposits);
-      delta = Math.max(delta, -maxRepay);
-    }
-    setStocks((prev) => ({
-      ...prev,
-      loans: prev.loans + delta,
-      deposits: prev.deposits + delta
-    }));
-    setLastAction(`Horizontal money: net bank credit ${formatSigned(delta)} posted.`);
+    const { stocks: nextStocks, deltaApplied } = applyBankCreditOp(stocks, inputs.bankCredit);
+    setStocks(nextStocks);
+    setLastAction(`Horizontal money: net bank credit ${formatSigned(deltaApplied)} posted.`);
   };
 
   const applyFiscal = () => {
-    let deposits = stocks.deposits + inputs.fiscalSpend;
-    let reserves = stocks.reserves + inputs.fiscalSpend;
-    const maxTax = Math.min(deposits, reserves);
-    const tax = Math.min(inputs.taxes, maxTax);
-    deposits -= tax;
-    reserves -= tax;
-    let tga = stocks.tga - inputs.fiscalSpend + tax;
-    let bondsHouseholds = stocks.bondsHouseholds;
-    const gap = TGA_TARGET - tga;
-    let autoIssue = 0;
-    let autoRedeem = 0;
-
-    if (gap > 0) {
-      autoIssue = Math.min(gap, deposits, reserves);
-      deposits -= autoIssue;
-      reserves -= autoIssue;
-      tga += autoIssue;
-      bondsHouseholds += autoIssue;
-    } else if (gap < 0) {
-      autoRedeem = Math.min(-gap, bondsHouseholds);
-      deposits += autoRedeem;
-      reserves += autoRedeem;
-      tga -= autoRedeem;
-      bondsHouseholds -= autoRedeem;
-    }
-
-    setStocks((prev) => ({
-      ...prev,
-      deposits,
-      reserves,
-      tga,
-      bondsHouseholds
-    }));
+    const { stocks: nextStocks, taxApplied, autoIssue, autoRedeem } = applyFiscalOp(
+      stocks,
+      { fiscalSpend: inputs.fiscalSpend, taxes: inputs.taxes },
+      { tgaTarget: TGA_TARGET }
+    );
+    setStocks(nextStocks);
     const autoNote = autoIssue > 0
       ? ` Auto-issue ${formatBillions(autoIssue)} to target TGA.`
       : autoRedeem > 0
         ? ` Auto-redeem ${formatBillions(autoRedeem)} to target TGA.`
         : ' TGA already at target.';
-    setLastAction(`Vertical money: spending ${formatBillions(inputs.fiscalSpend)} | taxes ${formatBillions(tax)}.${autoNote}`);
+    setLastAction(`Vertical money: spending ${formatBillions(inputs.fiscalSpend)} | taxes ${formatBillions(taxApplied)}.${autoNote}`);
   };
 
   const applyBondIssuance = () => {
-    const maxIssue = Math.min(inputs.bondIssuance, stocks.deposits, stocks.reserves);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds + maxIssue,
-      deposits: prev.deposits - maxIssue,
-      reserves: prev.reserves - maxIssue,
-      tga: prev.tga + maxIssue
-    }));
-    setLastAction(`Bond immunization: reserves swapped into bonds ${formatBillions(maxIssue)}.`);
+    const { stocks: nextStocks, amountApplied } = applyBondIssuanceOp(stocks, inputs.bondIssuance);
+    setStocks(nextStocks);
+    setLastAction(`Bond immunization: reserves swapped into bonds ${formatBillions(amountApplied)}.`);
   };
 
   const applyQeSwap = () => {
-    const maxSwap = Math.min(inputs.qeSwap, stocks.bondsHouseholds);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds - maxSwap,
-      bondsCb: prev.bondsCb + maxSwap,
-      deposits: prev.deposits + maxSwap,
-      reserves: prev.reserves + maxSwap
-    }));
-    setLastAction(`QE asset swap: bonds swapped into reserves ${formatBillions(maxSwap)}.`);
+    const { stocks: nextStocks, amountApplied } = applyQeSwapOp(stocks, inputs.qeSwap);
+    setStocks(nextStocks);
+    setLastAction(`QE asset swap: bonds swapped into reserves ${formatBillions(amountApplied)}.`);
   };
 
   const applyQtSwap = () => {
-    const maxSwap = Math.min(inputs.qeSwap, stocks.bondsCb, stocks.deposits, stocks.reserves);
-    setStocks((prev) => ({
-      ...prev,
-      bondsHouseholds: prev.bondsHouseholds + maxSwap,
-      bondsCb: prev.bondsCb - maxSwap,
-      deposits: prev.deposits - maxSwap,
-      reserves: prev.reserves - maxSwap
-    }));
-    setLastAction(`QT asset swap: reserves swapped into bonds ${formatBillions(maxSwap)}.`);
+    const { stocks: nextStocks, amountApplied } = applyQtSwapOp(stocks, inputs.qeSwap);
+    setStocks(nextStocks);
+    setLastAction(`QT asset swap: reserves swapped into bonds ${formatBillions(amountApplied)}.`);
   };
 
   const resetAll = () => {
@@ -341,21 +279,10 @@ export default function SFCMonetaryLab() {
   };
 
   return (
-    <div className="relative min-h-screen bg-amber-50 text-slate-900">
-      <div className="absolute inset-0 bg-grid opacity-40" />
-      <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-gradient-to-br from-amber-200 via-orange-100 to-transparent blur-3xl opacity-80 animate-float-slow" />
-      <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-gradient-to-tr from-emerald-200 via-teal-100 to-transparent blur-3xl opacity-70 animate-float-slower" />
-
-      <div className="relative mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10">
-        <header className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-amber-100">
-              <BadgeDollarSign size={14} />
-              SFC Monetary Lab
-            </span>
-            <span className="text-xs uppercase tracking-[0.3em] text-slate-500">Scale: $1,000B = $1T</span>
-          </div>
-          <div className="flex flex-col gap-3">
+    <>
+      <header className="flex flex-col gap-4">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Scale: $1,000B = $1T</p>
+        <div className="flex flex-col gap-3">
             <h1 className="font-display text-3xl md:text-4xl text-slate-900">
               Refuting Loanable Funds with Stock-Flow Consistent Balance Sheets
             </h1>
@@ -364,8 +291,8 @@ export default function SFCMonetaryLab() {
               posts double-entry updates to Treasury, the Federal Reserve, banks, and households
               balance sheets in real time.
             </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="stat-chip">
               <CircleDollarSign size={16} />
               <div>
@@ -387,22 +314,22 @@ export default function SFCMonetaryLab() {
                 <p className="text-lg font-semibold text-slate-900">{formatBillions(derived.householdNetWorth)}</p>
               </div>
             </div>
-          </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-          <div className="xl:col-span-4 flex flex-col gap-6">
-            <div className="card-surface">
-              <SectionTitle icon={Radar} title="Transaction Console" subtitle="Post flows in $B and observe the balance sheets." />
-              <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100">
-                <span>Last Entry</span>
-                <button onClick={resetAll} className="flex items-center gap-2 rounded-full bg-amber-100/10 px-3 py-1 text-[10px] font-semibold text-amber-100">
-                  <RefreshCw size={12} />
-                  Reset
-                </button>
-              </div>
-              <p className="mt-3 text-sm text-slate-600">{lastAction}</p>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="xl:col-span-4 flex flex-col gap-6">
+          <div className="card-surface">
+            <SectionTitle icon={Radar} title="Transaction Console" subtitle="Post flows in $B and observe the balance sheets." />
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100">
+              <span>Last Entry</span>
+              <button onClick={resetAll} className="flex items-center gap-2 rounded-full bg-amber-100/10 px-3 py-1 text-[10px] font-semibold text-amber-100">
+                <RefreshCw size={12} />
+                Reset
+              </button>
             </div>
+            <p className="mt-3 text-sm text-slate-600">{lastAction}</p>
+          </div>
 
             <ControlCard
               title="Horizontal Money"
@@ -544,21 +471,21 @@ export default function SFCMonetaryLab() {
                 </p>
               </div>
             </div>
-          </div>
+        </div>
 
-          <div className="xl:col-span-8 flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <BalanceSheetCard
-                title="U.S. Treasury"
-                icon={Landmark}
-                tone="bg-slate-900"
-                assets={[{ label: 'Treasury General Account', value: stocks.tga }]}
-                liabilities={[
-                  { label: 'Treasury Bonds Outstanding', value: stocks.bondsHouseholds + stocks.bondsCb }
-                ]}
-                equityLabel="Treasury Net Worth"
-                equityValue={derived.treasuryNetWorth}
-              />
+        <div className="xl:col-span-8 flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <BalanceSheetCard
+              title="U.S. Treasury"
+              icon={Landmark}
+              tone="bg-slate-900"
+              assets={[{ label: 'Treasury General Account', value: stocks.tga }]}
+              liabilities={[
+                { label: 'Treasury Bonds Outstanding', value: stocks.bondsHouseholds + stocks.bondsCb }
+              ]}
+              equityLabel="Treasury Net Worth"
+              equityValue={derived.treasuryNetWorth}
+            />
 
               <BalanceSheetCard
                 title="Central Bank (Fed)"
@@ -637,7 +564,276 @@ export default function SFCMonetaryLab() {
             </div>
           </div>
         </div>
+    </>
+  );
+}
+
+const NavPill = ({ href, icon: Icon, label, active }) => (
+  <a
+    href={href}
+    className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] transition ${
+      active
+        ? 'border-slate-900 bg-slate-900 text-amber-100 shadow-lg shadow-slate-900/20'
+        : 'border-slate-200 bg-white/70 text-slate-700 hover:bg-white'
+    }`}
+  >
+    <Icon size={14} />
+    {label}
+  </a>
+);
+
+const TopBar = ({ active }) => (
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <a
+      href="#/"
+      className="inline-flex items-center gap-2 self-start rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-amber-100 shadow-lg shadow-slate-900/20"
+    >
+      <BadgeDollarSign size={14} />
+      MMT Lab
+    </a>
+    <nav className="flex flex-wrap items-center gap-2">
+      <NavPill href="#/" icon={Home} label="Lab" active={active === 'lab'} />
+      <NavPill href="#/dynamics" icon={TrendingUp} label="Dynamics" active={active === 'dynamics'} />
+      <NavPill href="#/docs" icon={FileText} label="Docs" active={active === 'docs'} />
+      <NavPill href="#/blog" icon={BookOpen} label="Blog" active={active === 'blog'} />
+    </nav>
+  </div>
+);
+
+const SiteFrame = ({ children }) => (
+  <div className="relative min-h-screen bg-amber-50 text-slate-900">
+    <div className="absolute inset-0 bg-grid opacity-40" />
+    <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-gradient-to-br from-amber-200 via-orange-100 to-transparent blur-3xl opacity-80 animate-float-slow" />
+    <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-gradient-to-tr from-emerald-200 via-teal-100 to-transparent blur-3xl opacity-70 animate-float-slower" />
+
+    <div className="relative mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10">
+      {children}
+    </div>
+  </div>
+);
+
+const DocsPage = () => (
+  <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+    <div className="card-surface lg:col-span-4">
+      <h1 className="font-display text-3xl text-slate-900">Technical Docs</h1>
+      <p className="mt-3 text-sm text-slate-600">
+        The accounting note behind the simulator, including the sectoral balance identity and the mechanics of
+        bank credit, fiscal operations, bond issuance, and QE/QT.
+      </p>
+      <div className="mt-6 grid gap-2">
+        <a
+          href={TECHNICAL_PDF_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100 shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+        >
+          Open PDF
+        </a>
+        <a
+          href={TECHNICAL_TEX_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-800 transition hover:bg-white"
+        >
+          View LaTeX Source
+        </a>
+        <p className="text-xs text-slate-500">
+          Tip: the simulator uses the same variable names: deposits ($D$), loans ($L$), reserves ($R$), Treasuries
+          held by households ($B_H$), Treasuries held by the central bank ($B_F$), and the Treasury General Account
+          ($\TGA$).
+        </p>
       </div>
     </div>
+
+    <div className="card-surface lg:col-span-8">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Preview</p>
+        <a href={TECHNICAL_PDF_URL} target="_blank" rel="noreferrer" className="text-xs font-semibold text-slate-700 underline">
+          Open in new tab
+        </a>
+      </div>
+      <iframe
+        title="SFC Monetary Operations (PDF)"
+        src={TECHNICAL_PDF_URL}
+        className="mt-4 h-[72vh] w-full rounded-2xl border border-slate-200 bg-white"
+        loading="lazy"
+      />
+    </div>
+  </div>
+);
+
+const BLOG_POSTS = [
+  {
+    slug: 'sfc-monetary-operations',
+    title: 'Money as Bookkeeping: An SFC Tour of Loans, Deficits, Bonds, and QE',
+    excerpt: 'A plain-English companion to the balance-sheet lab and the technical note.',
+  },
+];
+
+const BlogIndexPage = () => (
+  <div className="grid gap-6">
+    <div className="card-surface max-w-3xl">
+      <h1 className="font-display text-3xl text-slate-900">Blog</h1>
+      <p className="mt-3 text-sm text-slate-600">
+        Short, readable explainers that connect the simulator's buttons to balance-sheet mechanics.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {BLOG_POSTS.map((post) => (
+        <a
+          key={post.slug}
+          href={`#/blog/${post.slug}`}
+          className="card-surface transition hover:-translate-y-0.5 hover:shadow-xl"
+        >
+          <h2 className="font-display text-xl text-slate-900">{post.title}</h2>
+          <p className="mt-2 text-sm text-slate-600">{post.excerpt}</p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Read</p>
+        </a>
+      ))}
+    </div>
+  </div>
+);
+
+const BlogPostSfcMonetaryOperations = () => (
+  <article className="mx-auto w-full max-w-3xl card-surface">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <a href="#/blog" className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-600 underline">
+        Back to blog
+      </a>
+      <a href={TECHNICAL_PDF_URL} target="_blank" rel="noreferrer" className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-600 underline">
+        Technical PDF
+      </a>
+    </div>
+
+    <h1 className="mt-4 font-display text-3xl text-slate-900">Money as Bookkeeping</h1>
+    <p className="mt-2 text-sm text-slate-600">
+      A Stock-Flow Consistent (SFC) tour of what changes when banks lend, the Treasury spends, bonds are issued,
+      and the central bank does QE/QT.
+    </p>
+
+    <h2 className="mt-8 font-display text-xl text-slate-900">TL;DR</h2>
+    <ul className="mt-3 list-disc pl-5 text-sm text-slate-700 space-y-2">
+      <li>Bank loans create deposits at the same time. That grows balance sheets, but does not create private net financial assets.</li>
+      <li>Fiscal deficits create private net financial assets (reserves and/or Treasuries).</li>
+      <li>Bond issuance and QE/QT are portfolio swaps: they change the mix (reserves vs Treasuries), not private net financial assets.</li>
+    </ul>
+
+    <h2 className="mt-8 font-display text-xl text-slate-900">The Four Balance Sheets</h2>
+    <p className="mt-3 text-sm text-slate-600">
+      The simulator consolidates the world into four sectors: households, banks, the central bank, and the Treasury.
+      The trick is to track the same instruments across all sectors at once.
+    </p>
+
+    <h2 className="mt-8 font-display text-xl text-slate-900">One Identity Worth Memorizing</h2>
+    <p className="mt-3 text-sm text-slate-600">
+      In this toy model, private net financial assets are simply reserves plus Treasuries held outside government:
+    </p>
+    <pre className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white/70 p-4 text-xs text-slate-800">
+{`Private NFA = R + B_H`}
+    </pre>
+    <p className="mt-3 text-sm text-slate-600">
+      Everything else (loans vs deposits inside the private sector) nets to zero when you consolidate banks and households.
+    </p>
+
+    <h2 className="mt-8 font-display text-xl text-slate-900">What Happens When</h2>
+
+    <h3 className="mt-5 font-display text-lg text-slate-900">1) A Bank Makes a Loan</h3>
+    <p className="mt-2 text-sm text-slate-600">
+      A bank loan creates a matching deposit. Loans and deposits rise together. That means private net financial assets do not change:
+      it is an intra-private-sector swap.
+    </p>
+
+    <h3 className="mt-5 font-display text-lg text-slate-900">2) The Treasury Spends</h3>
+    <p className="mt-2 text-sm text-slate-600">
+      Treasury spending credits deposits and reserves and debits the Treasury's account at the central bank. Reserves are a public liability
+      held by the private sector, so private net financial assets rise.
+    </p>
+
+    <h3 className="mt-5 font-display text-lg text-slate-900">3) Taxes Are Paid</h3>
+    <p className="mt-2 text-sm text-slate-600">
+      Taxes reverse the spending flow: deposits and reserves fall, and the Treasury's account rises. Private net financial assets fall.
+    </p>
+
+    <h3 className="mt-5 font-display text-lg text-slate-900">4) Bonds Are Issued</h3>
+    <p className="mt-2 text-sm text-slate-600">
+      Bond issuance (in the simulator's simplified mechanics) swaps reserves/deposits for Treasuries. One public liability goes down (reserves),
+      another goes up (Treasuries held by households). Net: no change in private net financial assets.
+    </p>
+
+    <h3 className="mt-5 font-display text-lg text-slate-900">5) QE (and QT)</h3>
+    <p className="mt-2 text-sm text-slate-600">
+      QE swaps Treasuries held by households into reserves (via banks). QT reverses the swap. Either way, the private sector's net financial
+      assets stay the same, even though the composition changes.
+    </p>
+
+    <h2 className="mt-8 font-display text-xl text-slate-900">Try It</h2>
+    <p className="mt-3 text-sm text-slate-600">
+      Use the lab buttons, then watch the identity tracker. If private net financial wealth and the consolidated public balance stop
+      offsetting each other, the bookkeeping broke.
+    </p>
+
+    <div className="mt-8 flex flex-wrap items-center gap-3">
+      <a
+        href="#/"
+        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-100 shadow-lg shadow-slate-900/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+      >
+        Back to Lab
+      </a>
+      <a
+        href={TECHNICAL_PDF_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-800 transition hover:bg-white"
+      >
+        Open Technical PDF
+      </a>
+    </div>
+  </article>
+);
+
+const NotFoundPage = () => (
+  <div className="card-surface max-w-3xl">
+    <h1 className="font-display text-3xl text-slate-900">Not Found</h1>
+    <p className="mt-3 text-sm text-slate-600">
+      That page does not exist. Try the lab, docs, or blog from the navigation.
+    </p>
+  </div>
+);
+
+export default function App() {
+  const path = useHashPath();
+  const section = path.startsWith('/docs') ? 'docs'
+    : path.startsWith('/blog') ? 'blog'
+    : path.startsWith('/dynamics') ? 'dynamics'
+    : 'lab';
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [path]);
+
+  let content = null;
+  if (section === 'docs') {
+    content = <DocsPage />;
+  } else if (section === 'dynamics') {
+    content = <MultiPeriodSim />;
+  } else if (section === 'blog') {
+    const slug = path.startsWith('/blog/') ? path.slice('/blog/'.length) : '';
+    if (!slug) {
+      content = <BlogIndexPage />;
+    } else if (slug === 'sfc-monetary-operations') {
+      content = <BlogPostSfcMonetaryOperations />;
+    } else {
+      content = <NotFoundPage />;
+    }
+  } else {
+    content = <SFCMonetaryLab />;
+  }
+
+  return (
+    <SiteFrame>
+      <TopBar active={section} />
+      {content}
+    </SiteFrame>
   );
 }
