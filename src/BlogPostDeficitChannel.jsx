@@ -277,6 +277,23 @@ Real deficit:          -$300B (surplus!)`}
           <li>Real resource constraints matter more than nominal deficit levels</li>
           <li>Inflation control requires coordinating monetary and fiscal policy</li>
         </ul>
+
+        <Callout type="info">
+          <p className="text-sm mb-2">
+            <strong>Note:</strong> The accounting principles underlying this analysis aren't just MMT theory—they're
+            acknowledged by mainstream institutions.
+          </p>
+          <p className="text-sm">
+            The Bank of England's{' '}
+            <a href="https://www.bankofengland.co.uk/-/media/boe/files/quarterly-bulletin/2014/money-creation-in-the-modern-economy.pdf"
+               target="_blank" rel="noopener noreferrer"
+               className="text-blue-700 hover:underline inline-flex items-center gap-1">
+              2014 Quarterly Bulletin <ExternalLink size={12} />
+            </a>{' '}
+            explicitly confirmed that banks create deposits when they lend, not the other way around—validating
+            the endogenous money view central to Stock-Flow Consistent accounting.
+          </p>
+        </Callout>
       </div>
 
       <div className="card-surface">
@@ -337,6 +354,7 @@ Real deficit:          -$300B (surplus!)`}
           <li>Mosler, W. (2024). "Warren Mosler Explains Why High Interest Rates Might Fan Inflation." <em>Bloomberg</em>.</li>
           <li>Stiglitz, J. (2022). "Joseph Stiglitz thinks further Fed rate hikes could make inflation worse." <em>CNBC</em>.</li>
           <li>Reuters (2022). "Central banks will fail to tame inflation without better fiscal policy, study says."</li>
+          <li>McLeay, M., Radia, A., & Thomas, R. (2014). "Money creation in the modern economy." <em>Bank of England Quarterly Bulletin</em>, Q1 2014.</li>
           <li>Godley, W., & Lavoie, M. (2007). <em>Monetary Economics: An Integrated Approach to Credit, Money, Income, Production and Wealth</em>. Palgrave Macmillan.</li>
         </ul>
       </div>
